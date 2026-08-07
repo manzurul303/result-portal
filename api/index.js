@@ -10,12 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// লোকাল পিসিতে public ফোল্ডারের ফাইল সার্ভ করার জন্য
+// Localhost-এ public ফোল্ডারের ফাইল সার্ভ করার জন্য
 app.use(express.static(path.join(__dirname, '../public')));
 
 let sessionCookie = '';
 
-// 1. CAPTCHA Endpoint
+// CAPTCHA Endpoint
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
@@ -50,7 +50,7 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
   }
 });
 
-// 2. Result Endpoint
+// Result Endpoint
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
