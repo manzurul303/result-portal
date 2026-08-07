@@ -12,11 +12,11 @@ app.use(express.urlencoded({ extended: true }));
 
 let sessionCookie = '';
 
-// Target Base URL (v2 update)
+// Target Portal Endpoint
 const BASE_URL = 'https://www.educationboardresults.gov.bd/v2/home';
-const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php'; // প্রয়োজন অনুযায়ী v2 রেজাল্ট এন্ডপয়েন্টে আপডেট করুন
+const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php';
 
-// 1. CAPTCHA & Session Endpoint
+// 1. Fetch CAPTCHA & Cookie Route
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get(BASE_URL, {
@@ -49,11 +49,11 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
       sessionCookie: sessionCookie
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সরকারি v2 সার্ভারে কানেক্ট করা যাচ্ছে না।' });
+    res.status(500).json({ success: false, message: 'সরকারি সার্ভারে কানেক্ট করা যাচ্ছে না।' });
   }
 });
 
-// 2. Result Fetching Endpoint
+// 2. Fetch Result Route
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -95,13 +95,14 @@ app.post(['/api/result', '/result'], async (req, res) => {
   }
 });
 
-// Localhost Testing Support
+// Local Development Engine Support
 if (require.main === module) {
   app.use(express.static(path.join(__dirname, '..')));
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Local Server Running on http://localhost:${PORT}`);
   });
 }
 
+// Vercel Serverless Function Export
 module.exports = app;
