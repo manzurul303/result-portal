@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 
@@ -10,12 +9,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files (index.html, styles.css, script.js)
-app.use(express.static(path.join(__dirname)));
-
 let sessionCookie = '';
 
-// 1. Fetch CAPTCHA & Session Cookie from official site
+// 1. CAPTCHA & Session Fetch Endpoint
 app.get('/api/captcha', async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
@@ -32,7 +28,6 @@ app.get('/api/captcha', async (req, res) => {
 
     const $ = cheerio.load(response.data);
     
-    // Extract math expression e.g. "5 + 3"
     let mathQuestion = '';
     $('td').each((i, el) => {
       const text = $(el).text().trim();
@@ -47,12 +42,11 @@ app.get('/api/captcha', async (req, res) => {
       sessionCookie: sessionCookie
     });
   } catch (error) {
-    console.error('Captcha error:', error.message);
     res.status(500).json({ success: false, message: 'সরকারি সার্ভারে কানেক্ট করা যাচ্ছে না।' });
   }
 });
 
-// 2. Submit Search Parameters & Scrape Result
+// 2. Result Submit Endpoint
 app.post('/api/result', async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -89,14 +83,8 @@ app.post('/api/result', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Result submit error:', error.message);
     res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
   }
-});
-
-// Wildcard Route for Frontend Loading
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
