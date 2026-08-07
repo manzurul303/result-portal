@@ -2,61 +2,81 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.urlencoded({ extended: true }));
 
-// 1. Fetch Math CAPTCHA from official government portal
+// Serve static frontend files (index.html, styles.css, script.js)
+app.use(express.static(path.join(__dirname)));
+
+let sessionCookie = '';
+
+// 1. Fetch CAPTCHA & Session Cookie from official site
 app.get('/api/captcha', async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      timeout: 10000
     });
 
     const cookies = response.headers['set-cookie'];
-    const cookieHeader = cookies ? cookies.map(c => c.split(';')[0]).join('; ') : '';
+    if (cookies) {
+      sessionCookie = cookies.map(c => c.split(';')[0]).join('; ');
+    }
 
     const $ = cheerio.load(response.data);
     
-    // Extract math expression e.g., "5 + 3"
-    const mathText = $('td:contains("+")').text().trim();
+    // Extract math expression e.g. "5 + 3"
+    let mathQuestion = '';
+    $('td').each((i, el) => {
+      const text = $(el).text().trim();
+      if (text.includes('+') && text.length < 15) {
+        mathQuestion = text;
+      }
+    });
 
-    res.json({ 
-      success: true, 
-      mathQuestion: mathText || '5 + 3',
-      sessionCookie: cookieHeader 
+    res.json({
+      success: true,
+      mathQuestion: mathQuestion || '5 + 3',
+      sessionCookie: sessionCookie
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Official server connect error' });
+    console.error('Captcha error:', error.message);
+    res.status(500).json({ success: false, message: 'সরকারি সার্ভারে কানেক্ট করা যাচ্ছে না।' });
   }
 });
 
-// 2. Submit Result Request to educationboardresults.gov.bd
+// 2. Submit Search Parameters & Scrape Result
 app.post('/api/result', async (req, res) => {
-  const { exam, year, board, roll, reg, value, sessionCookie } = req.body;
+  const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
   try {
     const params = new URLSearchParams();
-    params.append('sr', '3'); // Standard Result
-    params.append('et', '2'); // Exam type
-    params.append('exam', exam);
-    params.append('year', year);
-    params.append('board', board);
+    params.append('sr', '3');
+    params.append('et', '2');
+    params.append('exam', exam || 'hsc');
+    params.append('year', year || '2025');
+    params.append('board', board || 'jessore');
     params.append('roll', roll);
-    params.append('reg', reg);
-    params.append('value', value); // Math result answer
+    params.append('reg', reg || '');
+    params.append('value', value);
+
+    const activeCookie = clientCookie || sessionCookie;
 
     const response = await axios.post('https://www.educationboardresults.gov.bd/result.php', params.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': sessionCookie,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Cookie': activeCookie,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://www.educationboardresults.gov.bd/'
-      }
+      },
+      timeout: 12000
     });
 
     const $ = cheerio.load(response.data);
@@ -65,12 +85,18 @@ app.post('/api/result', async (req, res) => {
     if (resultTable) {
       res.json({ success: true, html: resultTable });
     } else {
-      res.json({ success: false, message: 'তথ্য সঠিক নয় অথবা রেজাল্ট পাওয়া যায়নি।' });
+      res.json({ success: false, message: 'প্রদত্ত তথ্য ভুল অথবা রেজাল্ট পাওয়া যায়নি।' });
     }
 
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন।' });
+    console.error('Result submit error:', error.message);
+    res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
   }
+});
+
+// Wildcard Route for Frontend Loading
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
