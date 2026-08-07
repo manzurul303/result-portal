@@ -10,9 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ১. স্ট্যাটিক ফাইল (styles.css, script.js) সার্ভ করার জন্য
+app.use(express.static(__dirname));
+
 let sessionCookie = '';
 
-// 1. CAPTCHA & Session Fetch Endpoint
+// ২. CAPTCHA & Session Fetch Endpoint
 app.get('/api/captcha', async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
@@ -47,7 +50,7 @@ app.get('/api/captcha', async (req, res) => {
   }
 });
 
-// 2. Result Submit Endpoint
+// ৩. Result Submit Endpoint
 app.post('/api/result', async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -88,7 +91,7 @@ app.post('/api/result', async (req, res) => {
   }
 });
 
-// Frontend HTML Route Fix
+// ৪. Frontend HTML Fallback (একদম শেষে থাকবে)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
