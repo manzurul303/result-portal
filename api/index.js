@@ -10,12 +10,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Localhost-এ public ফোল্ডারের ফাইল সার্ভ করার জন্য
-app.use(express.static(path.join(__dirname, '../public')));
+// Localhost এবং Vercel—দুটোতেই public ফোল্ডার সঠিকভাবে পাওয়ার জন্য
+const publicPath = path.join(process.cwd(), 'public');
+app.use(express.static(publicPath));
 
 let sessionCookie = '';
 
-// CAPTCHA Endpoint
+// 1. CAPTCHA Endpoint
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
@@ -50,7 +51,7 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
   }
 });
 
-// Result Endpoint
+// 2. Result Endpoint
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -91,11 +92,16 @@ app.post(['/api/result', '/result'], async (req, res) => {
   }
 });
 
-// Localhost Server Runner
+// Root / Fallback Route (সব ইন্টারফেসের জন্য public/index.html লোড করবে)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// Localhost Listener
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`Local server running on http://localhost:${PORT}`);
+    console.log(`Server running locally on http://localhost:${PORT}`);
   });
 }
 
