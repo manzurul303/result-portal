@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 
@@ -10,17 +9,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Localhost-এ public ফোল্ডারের ফাইল সার্ভ করার জন্য
-app.use(express.static(path.join(__dirname, '../public')));
+const BASE_URL = 'https://www.educationboardresults.gov.bd/v2/home';
+const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php';
 
 let sessionCookie = '';
 
-// CAPTCHA Endpoint
+// API CAPTCHA Route
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
-    const response = await axios.get('https://www.educationboardresults.gov.bd/', {
+    const response = await axios.get(BASE_URL, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Referer': BASE_URL
       },
       timeout: 10000
     });
@@ -31,9 +32,8 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
     }
 
     const $ = cheerio.load(response.data);
-    
     let mathQuestion = '';
-    $('td').each((i, el) => {
+    $('td, label, div').each((i, el) => {
       const text = $(el).text().trim();
       if (text.includes('+') && text.length < 15) {
         mathQuestion = text;
@@ -46,11 +46,11 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
       sessionCookie: sessionCookie
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সরকারি সার্ভারে কানেক্ট করা যাচ্ছে না।' });
+    res.status(500).json({ success: false, message: 'Unable to connect to government portal.' });
   }
 });
 
-// Result Endpoint
+// API Result Route
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -67,36 +67,28 @@ app.post(['/api/result', '/result'], async (req, res) => {
 
     const activeCookie = clientCookie || sessionCookie;
 
-    const response = await axios.post('https://www.educationboardresults.gov.bd/result.php', params.toString(), {
+    const response = await axios.post(RESULT_URL, params.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cookie': activeCookie,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.educationboardresults.gov.bd/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': BASE_URL,
+        'Origin': 'https://www.educationboardresults.gov.bd'
       },
       timeout: 12000
     });
 
     const $ = cheerio.load(response.data);
-    const resultTable = $('table.tbl_result').parent().html();
+    const resultTable = $('table.tbl_result').parent().html() || $('table').parent().html();
 
     if (resultTable) {
       res.json({ success: true, html: resultTable });
     } else {
-      res.json({ success: false, message: 'প্রদত্ত তথ্য ভুল অথবা রেজাল্ট পাওয়া যায়নি।' });
+      res.json({ success: false, message: 'Invalid credentials or result not found.' });
     }
-
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
+    res.status(500).json({ success: false, message: 'Server did not respond. Please try again.' });
   }
 });
-
-// Localhost Server Runner
-if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Local server running on http://localhost:${PORT}`);
-  });
-}
 
 module.exports = app;
