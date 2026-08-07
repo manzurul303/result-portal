@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Result Portal</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Screen Centering Wrapper -->
+  <div class="site-wrapper">
+    <div class="container">
+      
+      <!-- Header Section -->
+      <header class="main-header">
+        <h1 class="portal-title">
+          <i class="fa-solid fa-graduation-cap brand-icon"></i>
+          <span>Academic Result Portal</span>
+        </h1>
+        <p class="subtitle">Instant, Official & Secure Student Result Verification</p>
+      </header>
+
+      <!-- Neutral Notice Banner -->
+      <div class="notice-banner">
+        <div class="notice-icon-box">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div class="notice-marquee-wrapper">
+          <div class="notice-marquee">
+            Welcome to the Result Verification Portal. Verify academic performance, grade breakdowns, and institutional data quickly and efficiently.
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Verification Card -->
+      <div class="result-card">
+        <!-- Card Tabs -->
+        <div class="card-tabs">
+          <button class="tab-btn active" id="tab-individual" onclick="switchTab('individual')">
+            <i class="fa-solid fa-user"></i> Individual Verification
+          </button>
+          <button class="tab-btn" id="tab-institution" onclick="switchTab('institution')">
+            <i class="fa-solid fa-building-columns"></i> Institution Result
+          </button>
+        </div>
+
+        <!-- Tab 1: Individual Verification -->
+        <div id="individualTab" class="card-body tab-content">
+          <div class="portal-grid-layout">
+            
+            <!-- Left Side: Form Section -->
+            <div class="form-section">
+              <form id="individualForm">
+                <div class="form-grid-inner">
+                  
+                  <div class="form-group">
+                    <label>EXAMINATION</label>
+                    <select id="examType">
+                      <option value="hsc">HSC/Alim/Equivalent</option>
+                      <option value="ssc">SSC/Dakhil/Equivalent</option>
+                      <option value="jsc">JSC/JDC</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>NAME OF BOARD</label>
+                    <select id="boardName">
+                      <option value="jessore" selected>Jessore</option>
+                      <option value="dhaka">Dhaka</option>
+                      <option value="barisal">Barisal</option>
+                      <option value="chittagong">Chittagong</option>
+                      <option value="comilla">Comilla</option>
+                      <option value="dinajpur">Dinajpur</option>
+                      <option value="mymensingh">Mymensingh</option>
+                      <option value="rajshahi">Rajshahi</option>
+                      <option value="sylhet">Sylhet</option>
+                      <option value="madrasah">Madrasah</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>EXAM YEAR</label>
+                    <select id="examYear">
+                      <option value="2026">2026</option>
+                      <option value="2025">2025</option>
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                      <option value="2021">2021</option>
+                      <option value="2020">2020</option>
+                      <option value="2019">2019</option>
+                      <option value="2018">2018</option>
+                      <option value="2017">2017</option>
+                      <option value="2016">2016</option>
+                      <option value="2015">2015</option>
+                      <option value="2014">2014</option>
+                      <option value="2013">2013</option>
+                      <option value="2012">2012</option>
+                      <option value="2011">2011</option>
+                      <option value="2010">2010</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>BOARD ROLL NO.</label>
+                    <input type="text" placeholder="Enter Roll No." />
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label>REGISTRATION NO.</label>
+                    <input type="text" placeholder="Enter Registration No." />
+                  </div>
+
+                </div>
+
+                <div class="button-group">
+                  <button type="button" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Side: Individual Search Guide Sidebar -->
+            <div class="info-section">
+              <div class="info-header">
+                <div class="info-icon-box">
+                  <i class="fa-regular fa-id-card"></i>
+                </div>
+                <div>
+                  <h3>Individual Search Guide</h3>
+                  <p class="info-desc">Steps to retrieve student records.</p>
+                </div>
+              </div>
+
+              <div class="guide-steps">
+                <div class="step-card">
+                  <span class="step-badge">1</span>
+                  <span>Select <strong>Exam</strong>, <strong>Board</strong>, and <strong>Year</strong>.</span>
+                </div>
+                <div class="step-card">
+                  <span class="step-badge">2</span>
+                  <span>Provide valid <strong>Roll</strong> & <strong>Reg.</strong> numbers.</span>
+                </div>
+                <div class="step-card">
+                  <span class="step-badge">3</span>
+                  <span>Click <strong>Get Result</strong> to view details.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tab 2: Institution Result -->
+        <div id="institutionTab" class="card-body tab-content hidden">
+          <div class="portal-grid-layout">
+            
+            <!-- Left Side: Institution Form -->
+            <div class="form-section">
+              <form id="institutionForm">
+                <div class="form-grid-inner">
+                  
+                  <div class="form-group">
+                    <label>EXAMINATION</label>
+                    <select>
+                      <option value="hsc">HSC/Alim/Equivalent</option>
+                      <option value="ssc">SSC/Dakhil/Equivalent</option>
+                      <option value="jsc">JSC/JDC</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>NAME OF BOARD</label>
+                    <select>
+                      <option value="jessore" selected>Jessore</option>
+                      <option value="dhaka">Dhaka</option>
+                      <option value="barisal">Barisal</option>
+                      <option value="chittagong">Chittagong</option>
+                      <option value="comilla">Comilla</option>
+                      <option value="dinajpur">Dinajpur</option>
+                      <option value="mymensingh">Mymensingh</option>
+                      <option value="rajshahi">Rajshahi</option>
+                      <option value="sylhet">Sylhet</option>
+                      <option value="madrasah">Madrasah</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>EXAM YEAR</label>
+                    <select>
+                      <option value="2026">2026</option>
+                      <option value="2025">2025</option>
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                      <option value="2021">2021</option>
+                      <option value="2020">2020</option>
+                      <option value="2019">2019</option>
+                      <option value="2018">2018</option>
+                      <option value="2017">2017</option>
+                      <option value="2016">2016</option>
+                      <option value="2015">2015</option>
+                      <option value="2014">2014</option>
+                      <option value="2013">2013</option>
+                      <option value="2012">2012</option>
+                      <option value="2011">2011</option>
+                      <option value="2010">2010</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>EIIN OF INSTITUTION</label>
+                    <input type="text" placeholder="e.g. 134616" />
+                  </div>
+                </div>
+
+                <div class="button-group">
+                  <button type="button" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Side: Institution Guide Sidebar -->
+            <div class="info-section">
+              <div class="info-header">
+                <div class="info-icon-box">
+                  <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                  <h3>Institution Guide</h3>
+                  <p class="info-desc">Summary of overall performance.</p>
+                </div>
+              </div>
+
+              <div class="guide-steps">
+                <div class="step-card">
+                  <span class="step-badge">1</span>
+                  <span>Select <strong>Exam</strong>, <strong>Board</strong>, & <strong>Year</strong>.</span>
+                </div>
+                <div class="step-card">
+                  <span class="step-badge">2</span>
+                  <span>Enter valid <strong>6-digit EIIN</strong> code.</span>
+                </div>
+                <div class="step-card">
+                  <span class="step-badge">3</span>
+                  <span>Click <strong>Get Result</strong> to display.</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Alert Box -->
+      <div class="alert-box">
+        <i class="fa-solid fa-triangle-exclamation alert-icon"></i>
+        <span>প্রদর্শিত তথ্যে কোনো ভুল থাকলে নিচে ডানদিকের <strong>WhatsApp</strong> বাটনে ক্লিক করে সরাসরি আমাদের সাথে যোগাযোগ করুন।</span>
+      </div>
+
+      <!-- Developer Credit Footer (Green Accent ONLY) -->
+      <!-- Developer Credit Footer -->
+<div class="developer-pill-container">
+  <a href="https://facebook.com" target="_blank" class="dev-pill-link">
+    <!-- নোটিসের মতো ছোট হালকা সবুজ গোল ব্যাজ -->
+    <div class="dev-badge-circle">
+      <i class="fa-solid fa-code"></i>
+    </div>
+
+    <span class="dev-name">Manzurul Haque</span>
+  </a>
+</div>
+
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/" target="_blank" class="whatsapp-btn" title="Contact Support">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <script src="script.js"></script>
+</body>
+</html>

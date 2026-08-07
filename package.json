@@ -1,0 +1,16 @@
+{
+  "name": "result-verification-system",
+  "version": "1.0.0",
+  "description": "High-traffic educational board result scraper proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-cache": "^5.1.2"
+  }
+}
