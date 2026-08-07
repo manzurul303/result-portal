@@ -10,9 +10,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Localhost এবং Vercel—দুটোতেই public ফোল্ডার সঠিকভাবে পাওয়ার জন্য
-const publicPath = path.join(process.cwd(), 'public');
-app.use(express.static(publicPath));
+// public ফোল্ডারের ফাইল সার্ভ করার জন্য
+app.use(express.static(path.join(__dirname, 'public')));
 
 let sessionCookie = '';
 
@@ -92,9 +91,9 @@ app.post(['/api/result', '/result'], async (req, res) => {
   }
 });
 
-// Root / Fallback Route (সব ইন্টারফেসের জন্য public/index.html লোড করবে)
+// HTML Fallback Route
 app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Localhost Listener
