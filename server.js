@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -85,6 +86,11 @@ app.post('/api/result', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
   }
+});
+
+// Frontend HTML Route Fix
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
