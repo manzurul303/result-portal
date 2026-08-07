@@ -2,16 +2,12 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// static files (styles.css, script.js) serve করার জন্য
-app.use(express.static(__dirname));
 
 let sessionCookie = '';
 
@@ -91,12 +87,5 @@ app.post('/api/result', async (req, res) => {
   }
 });
 
-// Fallback HTML Serve
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+// Vercel Serverless Export
 module.exports = app;
