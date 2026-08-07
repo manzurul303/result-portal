@@ -1,131 +1,79 @@
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-const cheerio = require("cheerio");
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('.'));
 
-const PORT = 5000;
-
-// Official Govt Result Portal Endpoint Proxy
-const OFFICIAL_GOVT_URL = "https://eboardresults.com/v2/home"; 
-
-// 1. Individual Result Live Scraper
-app.post("/api/verify-individual", async (req, res) => {
-  const { exam, board, year, roll, reg } = req.body;
-
+// 1. Fetch Math CAPTCHA from official government portal
+app.get('/api/captcha', async (req, res) => {
   try {
-    // Live Request to official portal backend
-    const govtResponse = await axios.post(
-      "https://eboardresults.com/v2/get-result",
-      new URLSearchParams({
-        exam: exam,
-        year: year,
-        board: board,
-        result_type: "1", // Individual
-        roll: roll,
-        reg: reg
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
+    const response = await axios.get('https://www.educationboardresults.gov.bd/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }
-    );
-
-    const $ = cheerio.load(govtResponse.data);
-
-    // Extracting Live Data from Official HTML Tables
-    const studentInfo = {};
-    const subjects = [];
-
-    $(".result-table-info tr").each((i, el) => {
-      const key = $(el).find("td").eq(0).text().trim();
-      const val = $(el).find("td").eq(1).text().trim();
-      if (key && val) studentInfo[key] = val;
     });
 
-    $(".subject-table tbody tr").each((i, el) => {
-      const code = $(el).find("td").eq(0).text().trim();
-      const name = $(el).find("td").eq(1).text().trim();
-      const paper = $(el).find("td").eq(2).text().trim();
-      if (code && name) subjects.push({ code, name, paper });
+    const cookies = response.headers['set-cookie'];
+    const cookieHeader = cookies ? cookies.map(c => c.split(';')[0]).join('; ') : '';
+
+    const $ = cheerio.load(response.data);
+    
+    // Extract math expression e.g., "5 + 3"
+    const mathText = $('td:contains("+")').text().trim();
+
+    res.json({ 
+      success: true, 
+      mathQuestion: mathText || '5 + 3',
+      sessionCookie: cookieHeader 
     });
-
-    if (Object.keys(studentInfo).length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Result not found or invalid Roll/Registration combination."
-      });
-    }
-
-    return res.json({
-      success: true,
-      data: { studentInfo, subjects }
-    });
-
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to connect to official Education Board server."
-    });
+    res.status(500).json({ success: false, message: 'Official server connect error' });
   }
 });
 
-// 2. Institution Result Live Scraper
-app.post("/api/verify-institution", async (req, res) => {
-  const { exam, board, year, eiin } = req.body;
+// 2. Submit Result Request to educationboardresults.gov.bd
+app.post('/api/result', async (req, res) => {
+  const { exam, year, board, roll, reg, value, sessionCookie } = req.body;
 
   try {
-    const govtResponse = await axios.post(
-      "https://eboardresults.com/v2/get-result",
-      new URLSearchParams({
-        exam: exam,
-        year: year,
-        board: board,
-        result_type: "2", // Institution
-        eiin: eiin
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
+    const params = new URLSearchParams();
+    params.append('sr', '3'); // Standard Result
+    params.append('et', '2'); // Exam type
+    params.append('exam', exam);
+    params.append('year', year);
+    params.append('board', board);
+    params.append('roll', roll);
+    params.append('reg', reg);
+    params.append('value', value); // Math result answer
+
+    const response = await axios.post('https://www.educationboardresults.gov.bd/result.php', params.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': sessionCookie,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Referer': 'https://www.educationboardresults.gov.bd/'
       }
-    );
-
-    const $ = cheerio.load(govtResponse.data);
-    const institutionInfo = {};
-
-    $(".inst-result-table tr").each((i, el) => {
-      const key = $(el).find("td").eq(0).text().trim();
-      const val = $(el).find("td").eq(1).text().trim();
-      if (key && val) institutionInfo[key] = val;
     });
 
-    if (Object.keys(institutionInfo).length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Institution record not found for this EIIN."
-      });
+    const $ = cheerio.load(response.data);
+    const resultTable = $('table.tbl_result').parent().html();
+
+    if (resultTable) {
+      res.json({ success: true, html: resultTable });
+    } else {
+      res.json({ success: false, message: 'তথ্য সঠিক নয় অথবা রেজাল্ট পাওয়া যায়নি।' });
     }
 
-    return res.json({
-      success: true,
-      data: { institutionInfo }
-    });
-
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Official server timeout or endpoint error."
-    });
+    res.status(500).json({ success: false, message: 'সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন।' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Live Scraper Proxy Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+module.exports = app;
