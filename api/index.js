@@ -10,11 +10,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-let sessionCookie = '';
+// Serve static assets (CSS, JS) from the root folder
+app.use(express.static(path.join(__dirname, '..')));
 
-// Target Portal Endpoint
+// Explicitly handle root route to serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+// Target Portal Endpoints
 const BASE_URL = 'https://www.educationboardresults.gov.bd/v2/home';
 const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php';
+
+let sessionCookie = '';
 
 // 1. Fetch CAPTCHA & Cookie Route
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
@@ -49,7 +57,7 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
       sessionCookie: sessionCookie
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সরকারি সার্ভারে কানেক্ট করা যাচ্ছে না।' });
+    res.status(500).json({ success: false, message: 'Unable to connect to government portal.' });
   }
 });
 
@@ -87,22 +95,20 @@ app.post(['/api/result', '/result'], async (req, res) => {
     if (resultTable) {
       res.json({ success: true, html: resultTable });
     } else {
-      res.json({ success: false, message: 'প্রদত্ত তথ্য ভুল অথবা রেজাল্ট পাওয়া যায়নি।' });
+      res.json({ success: false, message: 'Invalid credentials or result not found.' });
     }
 
   } catch (error) {
-    res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
+    res.status(500).json({ success: false, message: 'Server did not respond. Please try again.' });
   }
 });
 
-// Local Development Engine Support
+// Local execution check
 if (require.main === module) {
-  app.use(express.static(path.join(__dirname, '..')));
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Local Server Running on http://localhost:${PORT}`);
   });
 }
 
-// Vercel Serverless Function Export
 module.exports = app;
