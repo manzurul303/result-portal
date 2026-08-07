@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -9,9 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// লোকাল পিসিতে public ফোল্ডারের ফাইল সার্ভ করার জন্য
+app.use(express.static(path.join(__dirname, '../public')));
+
 let sessionCookie = '';
 
-// CAPTCHA & Session Fetch Endpoint (Both /api/captcha and /captcha support)
+// 1. CAPTCHA Endpoint
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
@@ -46,7 +50,7 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
   }
 });
 
-// Result Submit Endpoint (Both /api/result and /result support)
+// 2. Result Endpoint
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
@@ -86,5 +90,13 @@ app.post(['/api/result', '/result'], async (req, res) => {
     res.status(500).json({ success: false, message: 'সার্ভার রেসপন্স করেনি, আবার চেষ্টা করুন।' });
   }
 });
+
+// Localhost Server Runner
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Local server running on http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
