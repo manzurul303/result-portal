@@ -11,8 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 
 let sessionCookie = '';
 
-// 1. CAPTCHA & Session Fetch Endpoint
-app.get('/api/captcha', async (req, res) => {
+// CAPTCHA & Session Fetch Endpoint (Both /api/captcha and /captcha support)
+app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get('https://www.educationboardresults.gov.bd/', {
       headers: {
@@ -46,8 +46,8 @@ app.get('/api/captcha', async (req, res) => {
   }
 });
 
-// 2. Result Submit Endpoint
-app.post('/api/result', async (req, res) => {
+// Result Submit Endpoint (Both /api/result and /result support)
+app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
   try {
@@ -87,5 +87,4 @@ app.post('/api/result', async (req, res) => {
   }
 });
 
-// Vercel Serverless Export
 module.exports = app;
