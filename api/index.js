@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 
@@ -10,21 +9,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static CSS and JS files
-app.use(express.static(path.join(__dirname, '..')));
-
-// ROOT ROUTE: Serve index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'index.html'));
-});
-
-// Target Portal Endpoints
 const BASE_URL = 'https://www.educationboardresults.gov.bd/v2/home';
 const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php';
 
 let sessionCookie = '';
 
-// API CAPTCHA Route
+// 1. Fetch CAPTCHA & Cookie Route
 app.get(['/api/captcha', '/captcha'], async (req, res) => {
   try {
     const response = await axios.get(BASE_URL, {
@@ -60,7 +50,7 @@ app.get(['/api/captcha', '/captcha'], async (req, res) => {
   }
 });
 
-// API Result Route
+// 2. Fetch Result Route
 app.post(['/api/result', '/result'], async (req, res) => {
   const { exam, year, board, roll, reg, value, clientCookie } = req.body;
 
