@@ -96,7 +96,6 @@ body {
   justify-content: center;
   margin-right: 12px;
   box-shadow: 0 2px 8px rgba(0, 168, 107, 0.25);
-  /* Bounce animation removed for steady icon */
 }
 
 .notice-marquee-wrapper {
@@ -168,7 +167,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .portal-grid-layout {
@@ -280,7 +279,7 @@ body {
 }
 
 /* ==========================================
-   SIDEBAR GUIDE SECTION (Balanced Vertical Alignment)
+   SIDEBAR GUIDE SECTION
    ========================================== */
 .info-section {
   background-color: #f8fafc;
@@ -322,7 +321,6 @@ body {
   color: #64748b;
 }
 
-/* Balanced Spacing for 3 Steps */
 .guide-steps {
   display: flex;
   flex-direction: column;
@@ -364,7 +362,7 @@ body {
 }
 
 /* ==========================================
-   ALERT BOX & UPGRADED DEVELOPER PILL
+   ALERT BOX
    ========================================== */
 .alert-box {
   background-color: #fffbeb;
@@ -387,7 +385,7 @@ body {
 }
 
 /* ==========================================
-   DEVELOPED BY - MATCHED CIRCLE BADGE THEME
+   DEVELOPER BADGE PILL
    ========================================== */
 .developer-pill-container {
   display: flex;
@@ -400,10 +398,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  /* নোটিস ব্যানার ও কার্ডের সাথে পারফেক্ট ম্যাচিং ব্যাকগ্রাউন্ড */
   background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
   border: 1px solid #a7f3d0;
-  padding: 6px 18px 6px 8px; /* ব্যাজের জন্য বামে অ্যাডজাস্ট করা */
+  padding: 6px 18px 6px 8px;
   border-radius: 50px;
   text-decoration: none;
   font-size: 13.5px;
@@ -417,14 +414,13 @@ body {
   transform: translateY(-2px);
 }
 
-/* নোটিস বক্সের মতো হালকা সবুজ গোল ব্যাজ */
 .dev-badge-circle {
   width: 28px;
   height: 28px;
-  background-color: #dcfce7; /* সফট গ্রিন গোল ব্যাকগ্রাউন্ড */
-  color: #059669;            /* গ্রিন আইকন কালার */
+  background-color: #dcfce7;
+  color: #059669;
   border: 1px solid #a7f3d0;
-  border-radius: 50%;         /* একুরেট গোল শেপ */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -440,21 +436,18 @@ body {
   transform: scale(1.05);
 }
 
-/* "Developer:" ক্লিন টেক্সট */
 .dev-label {
   font-size: 12px;
   font-weight: 600;
   color: #047857;
 }
 
-/* ডিভাইডার বার */
 .dev-divider {
   width: 1px;
   height: 12px;
   background-color: #a7f3d0;
 }
 
-/* ফেসবুক আইকন */
 .dev-icon {
   color: #059669;
   font-size: 16px;
@@ -465,7 +458,6 @@ body {
   transform: scale(1.15);
 }
 
-/* ডেভেলপারের নাম */
 .dev-name {
   font-weight: 700;
   color: #064e3b;
@@ -496,7 +488,180 @@ body {
   transform: scale(1.08);
 }
 
-/* Responsive Layout Adjustment (< 768px) */
+/* ==========================================
+   MODAL & CAPTCHA POPUP STYLES
+   ========================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 15px;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-large {
+  max-width: 680px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 18px;
+}
+
+/* Captcha Layout */
+.captcha-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.captcha-img-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 45px;
+}
+
+.captcha-img-wrap svg {
+  height: 45px;
+  width: 100%;
+  max-width: 160px;
+}
+
+.btn-refresh {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #00a86b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+  background: #ecfdf5;
+  border-color: #00a86b;
+}
+
+.modal-form-group {
+  margin-bottom: 15px;
+}
+
+.modal-form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-form-group input:focus {
+  border-color: #00a86b;
+  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+}
+
+.full-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* Loading Spinner */
+.spinner-wrap {
+  text-align: center;
+  padding: 30px 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #00a86b;
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==========================================
+   RESPONSIVE LAYOUT ADJUSTMENTS (< 768px)
+   ========================================== */
 @media (max-width: 768px) {
   .portal-grid-layout {
     grid-template-columns: 1fr;
