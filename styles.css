@@ -42,14 +42,14 @@ body {
   gap: 12px;
   font-size: clamp(1.5rem, 4.5vw, 2.2rem);
   font-weight: 800;
-  color: #0f172a; /* Title text is now bold dark/black */
+  color: #0f172a;
   margin: 0 0 6px 0;
   letter-spacing: -0.3px;
   width: 100%;
 }
 
 .brand-icon {
-  color: #00a86b; /* Icon remains green */
+  color: #00a86b;
   font-size: 0.9em;
   flex-shrink: 0;
 }
@@ -555,20 +555,23 @@ body {
   color: #0f172a;
 }
 
+/* Title & Subtitle Center Aligned */
 .modal-title {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 4px;
+  text-align: center;
 }
 
 .modal-subtitle {
   font-size: 13px;
   color: #64748b;
   margin-bottom: 18px;
+  text-align: center;
 }
 
-/* Captcha Layout */
+/* Captcha Box Structure */
 .captcha-box {
   display: flex;
   align-items: center;
