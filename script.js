@@ -1,7 +1,7 @@
 let currentSessionCookie = '';
 
 // ==========================================
-// ১. ট্যাবসুইচিং লজিক (HTML onclick এর সাথে সিঙ্কড)
+// ১. ট্যাবসুইচিং লজিক (ইনপুট তথ্য অক্ষত রাখে)
 // ==========================================
 function switchTab(tabType) {
   const tabIndividualBtn = document.getElementById('tab-individual');
@@ -24,8 +24,17 @@ function switchTab(tabType) {
   }
 }
 
+// ==========================================
+// ২. পেজ রিলোড ও মডাল হ্যান্ডলিং
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-  // মডাল অটো ক্রিয়েশন
+  // পেজ রিলোড হলে শুধুমাত্র একবার ফর্ম ক্লিয়ার হবে
+  const indForm = document.getElementById('individualForm');
+  const instForm = document.getElementById('institutionForm');
+  if (indForm) indForm.reset();
+  if (instForm) instForm.reset();
+
+  // মডাল অটো ক্রিয়েশন
   initModals();
 
   const indSubmitBtn = document.getElementById('indSubmitBtn');
@@ -72,12 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         mathQuestionEl.textContent = data.mathQuestion;
-        currentSessionCookie = data.sessionCookie;
+        currentSessionCookie = data.sessionCookie || '';
       } else {
         mathQuestionEl.textContent = 'ব্যর্থ হয়েছে';
         captchaErrorEl.textContent = 'সার্ভার থেকে ক্যাপচা আনা যায়নি।';
       }
     } catch (err) {
+      mathQuestionEl.textContent = 'ব্যর্থ হয়েছে';
       captchaErrorEl.textContent = 'নেটওয়ার্ক এরর! আবার চেষ্টা করুন।';
     }
   }
@@ -123,7 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
       loadingSpinner.style.display = 'none';
 
       if (data.success) {
-        resultBody.innerHTML = data.html;
+        let resultHTML = `
+          <div style="font-family: sans-serif; line-height: 1.6;">
+            <p><strong>Student Name:</strong> ${data.data.studentName || 'N/A'}</p>
+            <p><strong>Father's Name:</strong> ${data.data.fatherName || 'N/A'}</p>
+            <p><strong>GPA:</strong> <span style="color: #059669; font-weight: bold;">${data.data.gpa || 'N/A'}</span></p>
+            <p><strong>Result Status:</strong> ${data.data.result || 'PASSED'}</p>
+          </div>
+        `;
+        resultBody.innerHTML = resultHTML;
       } else {
         resultBody.innerHTML = `<p style="color: #dc2626; font-weight: bold; text-align: center; padding: 20px;">${data.message || 'ভুল তথ্য অথবা ক্যাপচা সঠিক নয়।'}</p>`;
       }
