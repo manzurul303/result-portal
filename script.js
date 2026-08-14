@@ -34,7 +34,7 @@ function closeResultModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// Fast SVG Captcha Generator
+// Client SVG Captcha Generator
 function generateClientCaptcha(container) {
   const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   let code = '';
@@ -54,12 +54,9 @@ function generateClientCaptcha(container) {
 }
 
 // Load Captcha
-async function loadCaptcha() {
+function loadCaptcha() {
   const container = document.getElementById('captchaImageContainer');
-  if (!container) return;
-  
-  // সরাসরি ক্লায়েন্ট সাইড থেকে ইনস্ট্যান্ট ইনস্টল ক্যাপচা রেন্ডার করা হবে যাতে কোনো লেট না হয়
-  generateClientCaptcha(container);
+  if (container) generateClientCaptcha(container);
 }
 
 // Open Captcha Popup
@@ -71,7 +68,12 @@ function openCaptchaPopup() {
   loadCaptcha();
 }
 
-// Form Submission Event
+// Isolated Print Functionality
+function triggerPrintResult() {
+  window.print();
+}
+
+// Form Submission Listeners
 document.addEventListener('DOMContentLoaded', () => {
   const indForm = document.getElementById('individualForm');
   const instForm = document.getElementById('institutionForm');
@@ -106,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Final Submit after Captcha Validation
+// Submit Captcha & Fetch Result
 async function submitFinalResult() {
   const captchaVal = document.getElementById('captchaInput')?.value.trim();
   if (!captchaVal) {
@@ -146,46 +148,59 @@ async function submitFinalResult() {
       const student = data.data;
       if (resultBody) {
         resultBody.innerHTML = `
-          <div style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="font-size: 18px; color: #0f172a; margin-bottom: 5px;">WEB BASED RESULT PUBLICATION SYSTEM</h2>
-            <p style="font-size: 13px; color: #64748b;">RESULT OF ${(finalPayload.exam || '').toUpperCase()} EXAMINATION - ${finalPayload.year}</p>
-          </div>
+          <div id="printableResultArea" class="result-sheet-container">
+            <div class="result-header-badge">
+              <h2>WEB BASED RESULT PUBLICATION SYSTEM</h2>
+              <p>OFFICIAL RESULT SHEET - ${(finalPayload.exam || '').toUpperCase()} (${finalPayload.year})</p>
+            </div>
 
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
-            <tr>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Roll No</th>
-              <td style="padding: 10px; border: 1px solid #cbd5e1;">${student.roll || finalPayload.roll || 'N/A'}</td>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Registration No</th>
-              <td style="padding: 10px; border: 1px solid #cbd5e1;">${student.reg || finalPayload.reg || 'N/A'}</td>
-            </tr>
-            <tr>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Student Name</th>
-              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">${student.studentName || 'N/A'}</td>
-            </tr>
-            <tr>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Board</th>
-              <td style="padding: 10px; border: 1px solid #cbd5e1;">${(finalPayload.board || 'jessore').toUpperCase()}</td>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">GPA</th>
-              <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.gpa || '5.00'}</td>
-            </tr>
-            <tr>
-              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Result</th>
-              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.result || 'PASSED'}</td>
-            </tr>
-          </table>
+            <table class="result-table">
+              <tr>
+                <th>Roll No</th>
+                <td><strong>${student.roll || finalPayload.roll || 'N/A'}</strong></td>
+                <th>Registration No</th>
+                <td><strong>${student.reg || finalPayload.reg || 'N/A'}</strong></td>
+              </tr>
+              <tr>
+                <th>Student Name</th>
+                <td colspan="3"><strong>${student.studentName || 'N/A'}</strong></td>
+              </tr>
+              ${student.fatherName ? `
+              <tr>
+                <th>Father's Name</th>
+                <td colspan="3">${student.fatherName}</td>
+              </tr>` : ''}
+              ${student.motherName ? `
+              <tr>
+                <th>Mother's Name</th>
+                <td colspan="3">${student.motherName}</td>
+              </tr>` : ''}
+              <tr>
+                <th>Board</th>
+                <td>${(finalPayload.board || 'JASSORE').toUpperCase()}</td>
+                <th>GPA / Result</th>
+                <td><span class="status-badge">${student.gpa || '5.00'} (${student.result || 'PASSED'})</span></td>
+              </tr>
+            </table>
 
-          <div style="text-align: center; margin-top: 20px;">
-            <button onclick="closeResultModal()" class="btn-secondary" style="padding: 8px 16px; margin-right: 10px; cursor: pointer; border-radius: 6px;">Search Again</button>
-            <button onclick="window.print()" class="btn-primary" style="padding: 8px 16px; cursor: pointer; border-radius: 6px; display: inline-flex;"><i class="fa-solid fa-print"></i> Print Marksheet</button>
+            <div class="modal-actions-flex">
+              <button onclick="closeResultModal()" class="btn-secondary">
+                <i class="fa-solid fa-rotate-left"></i> Search Again
+              </button>
+              <button onclick="triggerPrintResult()" class="btn-primary">
+                <i class="fa-solid fa-print"></i> Print Marksheet
+              </button>
+            </div>
           </div>
         `;
       }
     } else {
       if (resultBody) {
         resultBody.innerHTML = `
-          <div style="text-align: center; padding: 20px;">
-            <p style="color: #ef4444; font-weight: bold;">⚠️ ${data.message || 'Result not found!'}</p>
-            <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer; border-radius: 6px;">Try Again</button>
+          <div style="text-align: center; padding: 25px;">
+            <p style="color: #ef4444; font-weight: 700; font-size: 15px;">⚠️ ${data.message || 'Result not found!'}</p>
+            <p style="color: #64748b; font-size: 13px; margin-top: 5px;">Please check the Roll/Reg number and try again.</p>
+            <button onclick="closeResultModal()" class="btn-secondary" style="margin: 20px auto 0 auto; display: block;">Search Again</button>
           </div>
         `;
       }
@@ -194,9 +209,9 @@ async function submitFinalResult() {
     if (loadingSpinner) loadingSpinner.style.display = 'none';
     if (resultBody) {
       resultBody.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <p style="color: #ef4444;">❌ Server Error. Unable to fetch result at this moment.</p>
-          <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer; border-radius: 6px;">Close</button>
+        <div style="text-align: center; padding: 25px;">
+          <p style="color: #ef4444; font-weight: 700;">❌ Server Connection Error</p>
+          <button onclick="closeResultModal()" class="btn-secondary" style="margin: 15px auto 0 auto; display: block;">Close</button>
         </div>
       `;
     }

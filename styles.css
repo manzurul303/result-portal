@@ -679,3 +679,109 @@ body {
     padding: 16px;
   }
 }
+
+/* ==========================================
+   ENHANCED RESULT SHEET & PRINT STYLES
+   ========================================== */
+.result-sheet-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.result-header-badge {
+  text-align: center;
+  border-bottom: 2px dashed #e2e8f0;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.result-header-badge h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.result-header-badge p {
+  font-size: 12px;
+  font-weight: 600;
+  color: #00a86b;
+  margin-top: 4px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+
+.result-table th, .result-table td {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+}
+
+.result-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  width: 25%;
+}
+
+.result-table td {
+  color: #0f172a;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  border-radius: 20px;
+  font-size: 12px;
+  border: 1px solid #86efac;
+}
+
+/* পাশাপাশি বাটন লেআউট */
+.modal-actions-flex {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.modal-actions-flex button {
+  flex: 1;
+  max-width: 200px;
+  margin: 0 !important;
+}
+
+/* প্রিন্ট করার জন্য ডেডিকেটেড স্টাইল (শুধু রেজাল্ট পপআপটাই প্রিন্ট হবে) */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #printableResultArea, #printableResultArea * {
+    visibility: visible !important;
+  }
+  #printableResultArea {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .modal-actions-flex, .modal-close {
+    display: none !important;
+  }
+}
