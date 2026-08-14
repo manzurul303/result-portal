@@ -1,7 +1,8 @@
 let activeTab = 'individual';
 let storedPayload = {};
+window.currentCaptchaCode = '';
 
-// Switch Tabs between Individual & Institution
+// Tab Switching
 function switchTab(tab) {
   activeTab = tab;
   const tabIndBtn = document.getElementById('tab-individual');
@@ -22,7 +23,7 @@ function switchTab(tab) {
   }
 }
 
-// Modal Toggle Functions
+// Modal Handlers
 function closeCaptchaModal() {
   const modal = document.getElementById('captchaModal');
   if (modal) modal.style.display = 'none';
@@ -33,26 +34,68 @@ function closeResultModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// Fetch Captcha SVG from Server API
+// Load Captcha with Auto-Fallback
 async function loadCaptcha() {
   const container = document.getElementById('captchaImageContainer');
   if (!container) return;
-  container.innerHTML = '<span style="font-size:13px; color:#666;">Loading Captcha...</span>';
+  
+  container.innerHTML = '<span style="font-size:12px; color:#64748b;">Generating...</span>';
 
   try {
     const res = await fetch('/api/captcha');
-    const data = await res.json();
-    if (data.success && data.svg) {
-      container.innerHTML = data.svg;
-    } else {
-      container.innerHTML = '<span style="font-size:13px; color:#e11d48;">Failed to load captcha</span>';
+    if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        if (data.svg) {
+          container.innerHTML = data.svg;
+          if (data.code) window.currentCaptchaCode = data.code;
+          return;
+        }
+      } else {
+        const textData = await res.text();
+        if (textData.includes('<svg')) {
+          container.innerHTML = textData;
+          return;
+        }
+      }
     }
+    // API ফেল করলে অটো ক্লায়েন্ট-সাইড ক্যাপচা জেনারেট হবে
+    generateClientCaptcha(container);
   } catch (err) {
-    container.innerHTML = '<span style="font-size:13px; color:#e11d48;">Captcha Error</span>';
+    generateClientCaptcha(container);
   }
 }
 
-// Form Handlers Setup
+// Client-side SVG Captcha Generator
+function generateClientCaptcha(container) {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  window.currentCaptchaCode = code;
+
+  const svg = `
+    <svg width="140" height="40" viewBox="0 0 140 40" xmlns="http://www.w3.org/2000/svg" style="background:#f1f5f9; border-radius:8px; user-select:none;">
+      <path d="M 10 20 Q 35 5, 70 20 T 130 15" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+      <path d="M 5 28 Q 45 35, 90 12 T 135 25" stroke="#e2e8f0" stroke-width="2" fill="none"/>
+      <text x="18" y="27" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#0f172a" letter-spacing="6" transform="rotate(-1 70 20)">${code}</text>
+    </svg>
+  `;
+  container.innerHTML = svg;
+}
+
+// Open Captcha Popup
+function openCaptchaPopup() {
+  const captchaModal = document.getElementById('captchaModal');
+  const captchaInput = document.getElementById('captchaInput');
+  if (captchaInput) captchaInput.value = '';
+  if (captchaModal) captchaModal.style.display = 'flex';
+  loadCaptcha();
+}
+
+// Event Listeners on DOM Load
 document.addEventListener('DOMContentLoaded', () => {
   const indForm = document.getElementById('individualForm');
   const instForm = document.getElementById('institutionForm');
@@ -87,20 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Open Captcha Popup Modal
-function openCaptchaPopup() {
-  const captchaModal = document.getElementById('captchaModal');
-  const captchaInput = document.getElementById('captchaInput');
-  if (captchaInput) captchaInput.value = '';
-  if (captchaModal) captchaModal.style.display = 'flex';
-  loadCaptcha();
-}
-
-// Final Submit Result after Captcha
+// Final Submit after Captcha
 async function submitFinalResult() {
   const captchaVal = document.getElementById('captchaInput')?.value.trim();
   if (!captchaVal) {
     alert('Please enter the captcha code.');
+    return;
+  }
+
+  // Client side captcha validation check (if local generated)
+  if (window.currentCaptchaCode && captchaVal.toUpperCase() !== window.currentCaptchaCode.toUpperCase()) {
+    alert('Incorrect Captcha Code! Please try again.');
+    loadCaptcha();
     return;
   }
 
@@ -131,43 +172,44 @@ async function submitFinalResult() {
       if (resultBody) {
         resultBody.innerHTML = `
           <div style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 5px;">WEB BASED RESULT PUBLICATION SYSTEM</h2>
-            <p style="font-size: 13px; color: #64748b;">RESULT OF ${finalPayload.exam.toUpperCase()} EXAMINATION - ${finalPayload.year}</p>
+            <h2 style="font-size: 18px; color: #0f172a; margin-bottom: 5px;">WEB BASED RESULT PUBLICATION SYSTEM</h2>
+            <p style="font-size: 13px; color: #64748b;">RESULT OF ${(finalPayload.exam || '').toUpperCase()} EXAMINATION - ${finalPayload.year}</p>
           </div>
 
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
             <tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Roll No</th>
-              <td style="padding: 8px; border: 1px solid #cbd5e1;">${student.roll || finalPayload.roll || 'N/A'}</td>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Registration No</th>
-              <td style="padding: 8px; border: 1px solid #cbd5e1;">${student.reg || finalPayload.reg || 'N/A'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Roll No</th>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;">${student.roll || finalPayload.roll || 'N/A'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Registration No</th>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;">${student.reg || finalPayload.reg || 'N/A'}</td>
             </tr>
             <tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Student Name</th>
-              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">${student.studentName || 'N/A'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Student Name</th>
+              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">${student.studentName || 'N/A'}</td>
             </tr>
             <tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Father's Name</th>
-              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1;">${student.fatherName || 'N/A'}</td>
-            </tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Mother's Name</th>
-              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1;">${student.motherName || 'N/A'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Father's Name</th>
+              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1;">${student.fatherName || 'N/A'}</td>
             </tr>
             <tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Board</th>
-              <td style="padding: 8px; border: 1px solid #cbd5e1;">${(finalPayload.board || 'jessore').toUpperCase()}</td>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">GPA</th>
-              <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.gpa || '5.00'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Mother's Name</th>
+              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1;">${student.motherName || 'N/A'}</td>
             </tr>
             <tr>
-              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Result</th>
-              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.result || 'PASSED'}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Board</th>
+              <td style="padding: 10px; border: 1px solid #cbd5e1;">${(finalPayload.board || 'jessore').toUpperCase()}</td>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">GPA</th>
+              <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.gpa || '5.00'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;">Result</th>
+              <td colspan="3" style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.result || 'PASSED'}</td>
             </tr>
           </table>
 
           <div style="text-align: center; margin-top: 20px;">
-            <button onclick="closeResultModal()" class="btn-secondary" style="padding: 8px 16px; margin-right: 10px; cursor: pointer;">Search Again</button>
-            <button onclick="window.print()" class="btn-primary" style="padding: 8px 16px; cursor: pointer;"><i class="fa-solid fa-print"></i> Print Marksheet</button>
+            <button onclick="closeResultModal()" class="btn-secondary" style="padding: 8px 16px; margin-right: 10px; cursor: pointer; border-radius: 6px;">Search Again</button>
+            <button onclick="window.print()" class="btn-primary" style="padding: 8px 16px; cursor: pointer; border-radius: 6px;"><i class="fa-solid fa-print"></i> Print Marksheet</button>
           </div>
         `;
       }
@@ -175,8 +217,8 @@ async function submitFinalResult() {
       if (resultBody) {
         resultBody.innerHTML = `
           <div style="text-align: center; padding: 20px;">
-            <p style="color: #dc2626; font-weight: bold;">⚠️ ${data.message || 'Result not found or Invalid Captcha!'}</p>
-            <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer;">Try Again</button>
+            <p style="color: #ef4444; font-weight: bold;">⚠️ ${data.message || 'Result not found or Invalid Captcha!'}</p>
+            <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer; border-radius: 6px;">Try Again</button>
           </div>
         `;
       }
@@ -186,8 +228,8 @@ async function submitFinalResult() {
     if (resultBody) {
       resultBody.innerHTML = `
         <div style="text-align: center; padding: 20px;">
-          <p style="color: #dc2626;">❌ Server Error. Unable to fetch result at this moment.</p>
-          <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer;">Close</button>
+          <p style="color: #ef4444;">❌ Server Error. Unable to fetch result at this moment.</p>
+          <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer; border-radius: 6px;">Close</button>
         </div>
       `;
     }
