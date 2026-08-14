@@ -1,5 +1,5 @@
 module.exports = async (req, res) => {
-  // CORS Headers
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -8,31 +8,21 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
-  }
-
   try {
-    // Body Parsing safely
-    let bodyData = req.body;
+    let bodyData = {};
     if (typeof req.body === 'string') {
       try {
         bodyData = JSON.parse(req.body);
       } catch (e) {
         bodyData = {};
       }
-    }
-    
-    const { exam, year, board, roll, reg, eiin } = bodyData || {};
-
-    if (!roll && !eiin) {
-      return res.status(200).json({
-        success: false,
-        message: 'অনুগ্রহ করে রোল নম্বর (Roll) বা EIIN প্রদান করুন।'
-      });
+    } else if (req.body) {
+      bodyData = req.body;
     }
 
-    // Success JSON response
+    const { exam, year, board, roll, reg, eiin, captcha } = bodyData;
+
+    // Response structure
     return res.status(200).json({
       success: true,
       data: {
@@ -46,12 +36,11 @@ module.exports = async (req, res) => {
         gpa: "5.00"
       }
     });
-
   } catch (error) {
-    console.error("Result handler error:", error);
+    console.error("API Error:", error);
     return res.status(200).json({
       success: false,
-      message: 'সার্ভার প্রসেসিংয়ে সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।'
+      message: 'সার্ভারে সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।'
     });
   }
 };
