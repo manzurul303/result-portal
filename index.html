@@ -58,7 +58,7 @@
                   
                   <div class="form-group">
                     <label>EXAMINATION</label>
-                    <select id="examType">
+                    <select id="indExam">
                       <option value="hsc">HSC/Alim/Equivalent</option>
                       <option value="ssc">SSC/Dakhil/Equivalent</option>
                       <option value="jsc">JSC/JDC</option>
@@ -67,7 +67,7 @@
 
                   <div class="form-group">
                     <label>NAME OF BOARD</label>
-                    <select id="boardName">
+                    <select id="indBoard">
                       <option value="jessore" selected>Jessore</option>
                       <option value="dhaka">Dhaka</option>
                       <option value="barisal">Barisal</option>
@@ -83,7 +83,7 @@
 
                   <div class="form-group">
                     <label>EXAM YEAR</label>
-                    <select id="examYear">
+                    <select id="indYear">
                       <option value="2026">2026</option>
                       <option value="2025">2025</option>
                       <option value="2024">2024</option>
@@ -106,18 +106,18 @@
 
                   <div class="form-group">
                     <label>BOARD ROLL NO.</label>
-                    <input type="text" placeholder="Enter Roll No." />
+                    <input type="text" id="indRoll" placeholder="Enter Roll No." required />
                   </div>
 
                   <div class="form-group full-width">
                     <label>REGISTRATION NO.</label>
-                    <input type="text" placeholder="Enter Registration No." />
+                    <input type="text" id="indReg" placeholder="Enter Registration No." />
                   </div>
 
                 </div>
 
                 <div class="button-group">
-                  <button type="button" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="button" id="indSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
                   <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
                 </div>
               </form>
@@ -165,7 +165,7 @@
                   
                   <div class="form-group">
                     <label>EXAMINATION</label>
-                    <select>
+                    <select id="instExam">
                       <option value="hsc">HSC/Alim/Equivalent</option>
                       <option value="ssc">SSC/Dakhil/Equivalent</option>
                       <option value="jsc">JSC/JDC</option>
@@ -174,7 +174,7 @@
 
                   <div class="form-group">
                     <label>NAME OF BOARD</label>
-                    <select>
+                    <select id="instBoard">
                       <option value="jessore" selected>Jessore</option>
                       <option value="dhaka">Dhaka</option>
                       <option value="barisal">Barisal</option>
@@ -190,7 +190,7 @@
 
                   <div class="form-group">
                     <label>EXAM YEAR</label>
-                    <select>
+                    <select id="instYear">
                       <option value="2026">2026</option>
                       <option value="2025">2025</option>
                       <option value="2024">2024</option>
@@ -213,12 +213,12 @@
 
                   <div class="form-group">
                     <label>EIIN OF INSTITUTION</label>
-                    <input type="text" placeholder="e.g. 134616" />
+                    <input type="text" id="instEiin" placeholder="e.g. 134616" required />
                   </div>
                 </div>
 
                 <div class="button-group">
-                  <button type="button" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="button" id="instSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
                   <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
                 </div>
               </form>
@@ -263,18 +263,15 @@
         <span>প্রদর্শিত তথ্যে কোনো ভুল থাকলে নিচে ডানদিকের হোয়াটসঅ্যাপ বাটনে ক্লিক করে সরাসরি আমাদের সাথে যোগাযোগ করুন।</span>
       </div>
 
-      <!-- Developer Credit Footer (Green Accent ONLY) -->
       <!-- Developer Credit Footer -->
-<div class="developer-pill-container">
-  <a href="https://facebook.com" target="_blank" class="dev-pill-link">
-    <!-- নোটিসের মতো ছোট হালকা সবুজ গোল ব্যাজ -->
-    <div class="dev-badge-circle">
-      <i class="fa-solid fa-code"></i>
-    </div>
-
-    <span class="dev-name">Manzurul Haque</span>
-  </a>
-</div>
+      <div class="developer-pill-container">
+        <a href="https://facebook.com" target="_blank" class="dev-pill-link">
+          <div class="dev-badge-circle">
+            <i class="fa-solid fa-code"></i>
+          </div>
+          <span class="dev-name">Manzurul Haque</span>
+        </a>
+      </div>
 
     </div>
   </div>

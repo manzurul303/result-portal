@@ -1,36 +1,165 @@
-// ট্যাব একটিভ ইফেক্ট হ্যান্ডলিং
+let currentSessionCookie = '';
+
+// ==========================================
+// ১. ট্যাবসুইচিং লজিক (HTML onclick এর সাথে সিঙ্কড)
+// ==========================================
+function switchTab(tabType) {
+  const tabIndividualBtn = document.getElementById('tab-individual');
+  const tabInstitutionBtn = document.getElementById('tab-institution');
+  const individualTab = document.getElementById('individualTab');
+  const institutionTab = document.getElementById('institutionTab');
+
+  if (tabType === 'individual') {
+    tabIndividualBtn.classList.add('active');
+    tabInstitutionBtn.classList.remove('active');
+
+    individualTab.classList.remove('hidden');
+    institutionTab.classList.add('hidden');
+  } else if (tabType === 'institution') {
+    tabInstitutionBtn.classList.add('active');
+    tabIndividualBtn.classList.remove('active');
+
+    institutionTab.classList.remove('hidden');
+    individualTab.classList.add('hidden');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // ইন্ডিভিজুয়াল ও ইনস্টিটিউশন ট্যাবের এলিমেন্ট নির্বাচন
-  const tabButtons = document.querySelectorAll('div[class*="tab"], button[class*="tab"], .tab-item'); 
+  // মডাল অটো ক্রিয়েশন
+  initModals();
 
-  // যদি আপনার ট্যাবের জন্য নির্দিষ্ট কোনো সাধারণ ক্লাস থাকে, তবে সব ট্যাব বাটন এভাবে সিলেক্ট করা যায়:
-  const individualTab = Array.from(document.querySelectorAll('*')).find(el => el.children.length === 0 && el.textContent.trim() === 'Individual Verification')?.parentElement;
-  const institutionTab = Array.from(document.querySelectorAll('*')).find(el => el.children.length === 0 && el.textContent.trim() === 'Institution Result')?.parentElement;
+  const indSubmitBtn = document.getElementById('indSubmitBtn');
+  const instSubmitBtn = document.getElementById('instSubmitBtn');
 
-  // আরো সহজ ও নিরাপদ উপায়: পেজের প্রথম দুই ট্যাব বাটন সিলেক্ট করা
-  const allTabs = document.querySelectorAll('.tab-btn, [role="tab"]');
+  // ইন্ডিভিজুয়াল গেট রেজাল্ট বাটনে ক্লিক
+  if (indSubmitBtn) {
+    indSubmitBtn.addEventListener('click', () => {
+      const roll = document.getElementById('indRoll').value.trim();
+      if (!roll) {
+        alert('অনুগ্রহ করে রোল নম্বর (Roll No) পূরণ করুন।');
+        return;
+      }
+      openCaptchaModal();
+    });
+  }
 
-  // সার্বজনীন ট্যাব সিঙ্ক লজিক
-  document.addEventListener('click', (e) => {
-    const targetTab = e.target.closest('button, div');
-    
-    if (targetTab && (targetTab.innerText.includes('Individual Verification') || targetTab.innerText.includes('Institution Result'))) {
-      
-      // ১. সব ট্যাবের প্যারেন্ট/বাটন থেকে একটিভ স্টাইল মুছে দেওয়া
-      document.querySelectorAll('*').forEach(el => {
-        if (el.innerText && (el.innerText.includes('Individual Verification') || el.innerText.includes('Institution Result'))) {
-          el.classList.remove('active', 'border-b-2', 'border-emerald-600', 'text-emerald-600');
-        }
+  // ইনস্টিটিউট গেট রেজাল্ট বাটনে ক্লিক
+  if (instSubmitBtn) {
+    instSubmitBtn.addEventListener('click', () => {
+      const eiin = document.getElementById('instEiin').value.trim();
+      if (!eiin) {
+        alert('অনুগ্রহ করে ৬ ডিজিটের EIIN কোড পূরণ করুন।');
+        return;
+      }
+      openCaptchaModal();
+    });
+  }
+
+  // ক্যাপচা পপআপ অপেন ও ফেচিং
+  async function openCaptchaModal() {
+    const captchaModal = document.getElementById('customCaptchaModal');
+    const mathQuestionEl = document.getElementById('customMathQuestion');
+    const captchaErrorEl = document.getElementById('customCaptchaError');
+
+    captchaModal.style.display = 'flex';
+    mathQuestionEl.textContent = 'ক্যাপচা লোড হচ্ছে...';
+    document.getElementById('customCaptchaInput').value = '';
+    captchaErrorEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/captcha');
+      const data = await res.json();
+
+      if (data.success) {
+        mathQuestionEl.textContent = data.mathQuestion;
+        currentSessionCookie = data.sessionCookie;
+      } else {
+        mathQuestionEl.textContent = 'ব্যর্থ হয়েছে';
+        captchaErrorEl.textContent = 'সার্ভার থেকে ক্যাপচা আনা যায়নি।';
+      }
+    } catch (err) {
+      captchaErrorEl.textContent = 'নেটওয়ার্ক এরর! আবার চেষ্টা করুন।';
+    }
+  }
+
+  // ক্যাপচা সাবমিট ও ফলাফল ফেচ
+  document.getElementById('customSubmitCaptchaBtn')?.addEventListener('click', async () => {
+    const captchaValue = document.getElementById('customCaptchaInput').value.trim();
+    if (!captchaValue) {
+      document.getElementById('customCaptchaError').textContent = 'ক্যাপচার সঠিক উত্তর লিখুন!';
+      return;
+    }
+
+    document.getElementById('customCaptchaModal').style.display = 'none';
+    const resultModal = document.getElementById('customResultModal');
+    const resultBody = document.getElementById('customResultBody');
+    const loadingSpinner = document.getElementById('customLoadingSpinner');
+
+    resultModal.style.display = 'flex';
+    loadingSpinner.style.display = 'block';
+    resultBody.innerHTML = '';
+
+    const isIndividual = document.getElementById('tab-individual').classList.contains('active');
+
+    const payload = {
+      exam: isIndividual ? document.getElementById('indExam').value : document.getElementById('instExam').value,
+      board: isIndividual ? document.getElementById('indBoard').value : document.getElementById('instBoard').value,
+      year: isIndividual ? document.getElementById('indYear').value : document.getElementById('instYear').value,
+      roll: isIndividual ? document.getElementById('indRoll').value.trim() : '',
+      reg: isIndividual ? document.getElementById('indReg').value.trim() : '',
+      eiin: !isIndividual ? document.getElementById('instEiin').value.trim() : '',
+      value: captchaValue,
+      clientCookie: currentSessionCookie
+    };
+
+    try {
+      const res = await fetch('/api/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      // ২. ক্লিক করা ট্যাবে অ্যাক্টিভ ইফেক্ট যুক্ত করা
-      targetTab.classList.add('active');
-      
-      // যদি ইনলাইন স্টাইল বা নির্দিষ্ট সিএসএস ক্লাস থাকে, সেটি নিশ্চিত করা
-      if (targetTab.innerText.includes('Institution Result')) {
-        targetTab.style.borderColor = '#059669'; // সবুজ বর্ডার
-        targetTab.style.color = '#059669'; // সবুজ ফন্ট
+      const data = await res.json();
+      loadingSpinner.style.display = 'none';
+
+      if (data.success) {
+        resultBody.innerHTML = data.html;
+      } else {
+        resultBody.innerHTML = `<p style="color: #dc2626; font-weight: bold; text-align: center; padding: 20px;">${data.message || 'ভুল তথ্য অথবা ক্যাপচা সঠিক নয়।'}</p>`;
       }
+    } catch (err) {
+      loadingSpinner.style.display = 'none';
+      resultBody.innerHTML = '<p style="color: #dc2626; text-align: center; padding: 20px;">সার্ভারে রিকোয়েস্ট পাঠাতে সমস্যা হয়েছে।</p>';
     }
   });
 });
+
+// ডাইনামিক পপআপ মডাল জেনারেটর
+function initModals() {
+  if (document.getElementById('customCaptchaModal')) return;
+
+  const modalHTML = `
+    <div id="customCaptchaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+      <div style="background:#fff; padding:25px; border-radius:12px; max-width:380px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative;">
+        <span onclick="document.getElementById('customCaptchaModal').style.display='none'" style="position:absolute; right:15px; top:10px; font-size:22px; cursor:pointer; color:#888;">&times;</span>
+        <h3 style="margin-top:0; color:#2c3e50;">Security Check</h3>
+        <p style="color:#666; font-size:14px;">গভমেন্ট সার্ভারের গাণিতিক ক্যাপচাটি পূরণ করুন:</p>
+        <div id="customMathQuestion" style="background:#f1f5f9; padding:12px; font-size:22px; font-weight:bold; color:#0f766e; border-radius:8px; margin:15px 0;">Loading...</div>
+        <input type="text" id="customCaptchaInput" placeholder="উত্তর লিখুন (যেমন: 8)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; text-align:center; font-size:16px; margin-bottom:12px;" autocomplete="off" />
+        <button id="customSubmitCaptchaBtn" style="width:100%; padding:12px; background:#059669; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Submit & View Result</button>
+        <p id="customCaptchaError" style="color:#dc2626; font-size:13px; margin-top:10px;"></p>
+      </div>
+    </div>
+
+    <div id="customResultModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+      <div style="background:#fff; padding:25px; border-radius:12px; max-width:750px; width:92%; max-height:85vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative;">
+        <span onclick="document.getElementById('customResultModal').style.display='none'" style="position:absolute; right:15px; top:10px; font-size:24px; cursor:pointer; color:#888;">&times;</span>
+        <h3 style="margin-top:0; color:#0f766e; text-align:center;">Academic Result Sheet</h3>
+        <div id="customLoadingSpinner" style="text-align:center; padding:30px; color:#0284c7; font-weight:bold;">গভমেন্ট সার্ভার থেকে ফলাফল ফেচ করা হচ্ছে...</div>
+        <div id="customResultBody" style="margin-top:15px;"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
