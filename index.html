@@ -117,7 +117,7 @@
                 </div>
 
                 <div class="button-group">
-                  <button type="button" id="indSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="submit" id="indSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
                   <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
                 </div>
               </form>
@@ -218,7 +218,7 @@
                 </div>
 
                 <div class="button-group">
-                  <button type="button" id="instSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
+                  <button type="submit" id="instSubmitBtn" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Result</button>
                   <button type="reset" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> Clear</button>
                 </div>
               </form>
@@ -280,6 +280,48 @@
   <a href="https://wa.me/" target="_blank" class="whatsapp-btn" title="Contact Support">
     <i class="fa-brands fa-whatsapp"></i>
   </a>
+
+  <!-- Modal 1: Captcha Verification Popup -->
+  <div id="captchaModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <button type="button" class="modal-close" onclick="closeCaptchaModal()">✕</button>
+      <h3 class="modal-title">Verify to view result</h3>
+      <p class="modal-subtitle">Enter the characters shown below.</p>
+      
+      <div class="captcha-box">
+        <div id="captchaImageContainer" class="captcha-img-wrap">
+          <!-- Server Captcha SVG Dynamic Render -->
+        </div>
+        <button type="button" class="btn-refresh" onclick="loadCaptcha()" title="Refresh Captcha">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+
+      <div class="modal-form-group">
+        <input type="text" id="captchaInput" placeholder="Enter Captcha Code" autocomplete="off" required />
+      </div>
+
+      <button type="button" class="btn-primary full-btn" onclick="submitFinalResult()">
+        <i class="fa-solid fa-magnifying-glass"></i> Get Result
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 2: Marksheet / Result Display Popup -->
+  <div id="resultModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box modal-large">
+      <button type="button" class="modal-close" onclick="closeResultModal()">✕</button>
+      
+      <div id="loadingSpinner" class="spinner-wrap" style="display: none;">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px; font-weight: 500;">Fetching Academic Record...</p>
+      </div>
+
+      <div id="modalResultBody">
+        <!-- Marksheet / Result details rendered here -->
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

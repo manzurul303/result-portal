@@ -1,106 +1,195 @@
-// Tab Switching Function
-function switchTab(tabType) {
-  const individualTab = document.getElementById('individualTab');
-  const institutionTab = document.getElementById('institutionTab');
-  const individualForm = document.getElementById('individualForm');
-  const institutionForm = document.getElementById('institutionForm');
+let activeTab = 'individual';
+let storedPayload = {};
 
-  if (!individualTab || !institutionTab) return;
+// Switch Tabs between Individual & Institution
+function switchTab(tab) {
+  activeTab = tab;
+  const tabIndBtn = document.getElementById('tab-individual');
+  const tabInstBtn = document.getElementById('tab-institution');
+  const tabIndBody = document.getElementById('individualTab');
+  const tabInstBody = document.getElementById('institutionTab');
 
-  if (tabType === 'individual') {
-    individualTab.classList.add('active');
-    institutionTab.classList.remove('active');
-    if (individualForm) individualForm.style.display = 'block';
-    if (institutionForm) institutionForm.style.display = 'none';
+  if (tab === 'individual') {
+    if (tabIndBtn) tabIndBtn.classList.add('active');
+    if (tabInstBtn) tabInstBtn.classList.remove('active');
+    if (tabIndBody) tabIndBody.classList.remove('hidden');
+    if (tabInstBody) tabInstBody.classList.add('hidden');
   } else {
-    institutionTab.classList.add('active');
-    individualTab.classList.remove('active');
-    if (individualForm) individualForm.style.display = 'none';
-    if (institutionForm) institutionForm.style.display = 'block';
+    if (tabInstBtn) tabInstBtn.classList.add('active');
+    if (tabIndBtn) tabIndBtn.classList.remove('active');
+    if (tabInstBody) tabInstBody.classList.remove('hidden');
+    if (tabIndBody) tabIndBody.classList.add('hidden');
   }
 }
 
 // Modal Toggle Functions
-function closeModal() {
+function closeCaptchaModal() {
+  const modal = document.getElementById('captchaModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function closeResultModal() {
   const modal = document.getElementById('resultModal');
   if (modal) modal.style.display = 'none';
 }
 
-// DOM Content Loaded Handler
+// Fetch Captcha SVG from Server API
+async function loadCaptcha() {
+  const container = document.getElementById('captchaImageContainer');
+  if (!container) return;
+  container.innerHTML = '<span style="font-size:13px; color:#666;">Loading Captcha...</span>';
+
+  try {
+    const res = await fetch('/api/captcha');
+    const data = await res.json();
+    if (data.success && data.svg) {
+      container.innerHTML = data.svg;
+    } else {
+      container.innerHTML = '<span style="font-size:13px; color:#e11d48;">Failed to load captcha</span>';
+    }
+  } catch (err) {
+    container.innerHTML = '<span style="font-size:13px; color:#e11d48;">Captcha Error</span>';
+  }
+}
+
+// Form Handlers Setup
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('resultForm') || document.querySelector('form');
-  const modal = document.getElementById('resultModal');
-  const resultBody = document.getElementById('modalResultBody') || document.getElementById('resultBody');
-  const loadingSpinner = document.getElementById('loadingSpinner');
+  const indForm = document.getElementById('individualForm');
+  const instForm = document.getElementById('institutionForm');
 
-  if (form) {
-    form.addEventListener('submit', async (e) => {
+  if (indForm) {
+    indForm.addEventListener('submit', (e) => {
       e.preventDefault();
-
-      const rollInput = document.getElementById('roll');
-      const regInput = document.getElementById('reg');
-      const boardInput = document.getElementById('board');
-      const examInput = document.getElementById('exam');
-      const yearInput = document.getElementById('year');
-
-      const payload = {
-        exam: examInput ? examInput.value : '',
-        year: yearInput ? yearInput.value : '',
-        board: boardInput ? boardInput.value : '',
-        roll: rollInput ? rollInput.value : '',
-        reg: regInput ? regInput.value : ''
+      storedPayload = {
+        type: 'individual',
+        exam: document.getElementById('indExam')?.value || '',
+        board: document.getElementById('indBoard')?.value || '',
+        year: document.getElementById('indYear')?.value || '',
+        roll: document.getElementById('indRoll')?.value || '',
+        reg: document.getElementById('indReg')?.value || ''
       };
+      openCaptchaPopup();
+    });
+  }
 
-      if (modal) modal.style.display = 'flex';
-      if (loadingSpinner) loadingSpinner.style.display = 'block';
-      if (resultBody) resultBody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/result', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const textData = await res.text();
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-
-        let data;
-        try {
-          data = JSON.parse(textData);
-        } catch (jsonErr) {
-          if (resultBody) {
-            resultBody.innerHTML = '<p style="color: #dc2626; text-align: center; padding: 20px;">সার্ভার থেকে অবৈধ রেসপন্স এসেছে।</p>';
-          }
-          return;
-        }
-
-        if (data.success && data.data) {
-          if (resultBody) {
-            resultBody.innerHTML = `
-              <div style="font-family: sans-serif; line-height: 1.6; color: #1f2937;">
-                <p><strong>Student Name:</strong> ${data.data.studentName || 'N/A'}</p>
-                <p><strong>Father's Name:</strong> ${data.data.fatherName || 'N/A'}</p>
-                <p><strong>Mother's Name:</strong> ${data.data.motherName || 'N/A'}</p>
-                <p><strong>Roll No:</strong> ${data.data.roll || 'N/A'}</p>
-                <p><strong>Registration No:</strong> ${data.data.reg || 'N/A'}</p>
-                <p><strong>Board:</strong> ${data.data.board || 'N/A'}</p>
-                <p><strong>GPA:</strong> <span style="color: #059669; font-weight: bold;">${data.data.gpa || 'N/A'}</span></p>
-                <p><strong>Result:</strong> <span style="color: #059669; font-weight: bold;">${data.data.result || 'PASSED'}</span></p>
-              </div>
-            `;
-          }
-        } else {
-          if (resultBody) {
-            resultBody.innerHTML = `<p style="color: #dc2626; font-weight: bold; text-align: center; padding: 20px;">${data.message || 'কোনো তথ্য পাওয়া যায়নি।'}</p>`;
-          }
-        }
-      } catch (err) {
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (resultBody) {
-          resultBody.innerHTML = '<p style="color: #dc2626; text-align: center; padding: 20px;">সার্ভারে রিকোয়েস্ট পাঠাতে সমস্যা হয়েছে।</p>';
-        }
-      }
+  if (instForm) {
+    instForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      storedPayload = {
+        type: 'institution',
+        exam: document.getElementById('instExam')?.value || '',
+        board: document.getElementById('instBoard')?.value || '',
+        year: document.getElementById('instYear')?.value || '',
+        eiin: document.getElementById('instEiin')?.value || ''
+      };
+      openCaptchaPopup();
     });
   }
 });
+
+// Open Captcha Popup Modal
+function openCaptchaPopup() {
+  const captchaModal = document.getElementById('captchaModal');
+  const captchaInput = document.getElementById('captchaInput');
+  if (captchaInput) captchaInput.value = '';
+  if (captchaModal) captchaModal.style.display = 'flex';
+  loadCaptcha();
+}
+
+// Final Submit Result after Captcha
+async function submitFinalResult() {
+  const captchaVal = document.getElementById('captchaInput')?.value.trim();
+  if (!captchaVal) {
+    alert('Please enter the captcha code.');
+    return;
+  }
+
+  closeCaptchaModal();
+
+  const resultModal = document.getElementById('resultModal');
+  const loadingSpinner = document.getElementById('loadingSpinner');
+  const resultBody = document.getElementById('modalResultBody');
+
+  if (resultModal) resultModal.style.display = 'flex';
+  if (loadingSpinner) loadingSpinner.style.display = 'block';
+  if (resultBody) resultBody.innerHTML = '';
+
+  const finalPayload = { ...storedPayload, captcha: captchaVal };
+
+  try {
+    const res = await fetch('/api/result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(finalPayload)
+    });
+
+    const data = await res.json();
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
+
+    if (data.success && data.data) {
+      const student = data.data;
+      if (resultBody) {
+        resultBody.innerHTML = `
+          <div style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 5px;">WEB BASED RESULT PUBLICATION SYSTEM</h2>
+            <p style="font-size: 13px; color: #64748b;">RESULT OF ${finalPayload.exam.toUpperCase()} EXAMINATION - ${finalPayload.year}</p>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+            <tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Roll No</th>
+              <td style="padding: 8px; border: 1px solid #cbd5e1;">${student.roll || finalPayload.roll || 'N/A'}</td>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Registration No</th>
+              <td style="padding: 8px; border: 1px solid #cbd5e1;">${student.reg || finalPayload.reg || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Student Name</th>
+              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">${student.studentName || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Father's Name</th>
+              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1;">${student.fatherName || 'N/A'}</td>
+            </tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Mother's Name</th>
+              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1;">${student.motherName || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Board</th>
+              <td style="padding: 8px; border: 1px solid #cbd5e1;">${(finalPayload.board || 'jessore').toUpperCase()}</td>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">GPA</th>
+              <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.gpa || '5.00'}</td>
+            </tr>
+            <tr>
+              <th style="text-align: left; padding: 8px; border: 1px solid #cbd5e1; background: #f8fafc;">Result</th>
+              <td colspan="3" style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #16a34a;">${student.result || 'PASSED'}</td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 20px;">
+            <button onclick="closeResultModal()" class="btn-secondary" style="padding: 8px 16px; margin-right: 10px; cursor: pointer;">Search Again</button>
+            <button onclick="window.print()" class="btn-primary" style="padding: 8px 16px; cursor: pointer;"><i class="fa-solid fa-print"></i> Print Marksheet</button>
+          </div>
+        `;
+      }
+    } else {
+      if (resultBody) {
+        resultBody.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <p style="color: #dc2626; font-weight: bold;">⚠️ ${data.message || 'Result not found or Invalid Captcha!'}</p>
+            <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer;">Try Again</button>
+          </div>
+        `;
+      }
+    }
+  } catch (err) {
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
+    if (resultBody) {
+      resultBody.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <p style="color: #dc2626;">❌ Server Error. Unable to fetch result at this moment.</p>
+          <button onclick="closeResultModal()" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; cursor: pointer;">Close</button>
+        </div>
+      `;
+    }
+  }
+}
