@@ -1,102 +1,36 @@
-// Function to switch between Individual and Institution Tabs
-function switchTab(tabName) {
-  const individualTab = document.getElementById('individualTab');
-  const institutionTab = document.getElementById('institutionTab');
-  const tabIndividualBtn = document.getElementById('tab-individual');
-  const tabInstitutionBtn = document.getElementById('tab-institution');
+// ট্যাব একটিভ ইফেক্ট হ্যান্ডলিং
+document.addEventListener('DOMContentLoaded', () => {
+  // ইন্ডিভিজুয়াল ও ইনস্টিটিউশন ট্যাবের এলিমেন্ট নির্বাচন
+  const tabButtons = document.querySelectorAll('div[class*="tab"], button[class*="tab"], .tab-item'); 
 
-  if (tabName === 'individual') {
-    individualTab.classList.remove('hidden');
-    institutionTab.classList.add('hidden');
-    tabIndividualBtn.classList.add('active');
-    tabInstitutionBtn.classList.remove('active');
-  } else if (tabName === 'institution') {
-    institutionTab.classList.remove('hidden');
-    individualTab.classList.add('hidden');
-    tabInstitutionBtn.classList.add('active');
-    tabInstitutionBtn.classList.remove('active');
-  }
-}
+  // যদি আপনার ট্যাবের জন্য নির্দিষ্ট কোনো সাধারণ ক্লাস থাকে, তবে সব ট্যাব বাটন এভাবে সিলেক্ট করা যায়:
+  const individualTab = Array.from(document.querySelectorAll('*')).find(el => el.children.length === 0 && el.textContent.trim() === 'Individual Verification')?.parentElement;
+  const institutionTab = Array.from(document.querySelectorAll('*')).find(el => el.children.length === 0 && el.textContent.trim() === 'Institution Result')?.parentElement;
 
-// Global Variables for API Session
-let currentSessionCookie = '';
+  // আরো সহজ ও নিরাপদ উপায়: পেজের প্রথম দুই ট্যাব বাটন সিলেক্ট করা
+  const allTabs = document.querySelectorAll('.tab-btn, [role="tab"]');
 
-// Load Math CAPTCHA on Page Load
-document.addEventListener('DOMContentLoaded', async () => {
-  fetchCaptcha();
-});
-
-// Fetch Math Question / Captcha from Backend API
-async function fetchCaptcha() {
-  try {
-    const response = await fetch('/api/captcha');
-    const data = await response.json();
-
-    if (data.success) {
-      currentSessionCookie = data.sessionCookie || '';
-      // যদি ক্যাপচা দেখানোর ইনপুট/লেবেল থাকে তা আপডেট করবে
-      const captchaLabel = document.getElementById('captchaQuestion');
-      if (captchaLabel) {
-        captchaLabel.textContent = data.mathQuestion;
-      }
-    }
-  } catch (error) {
-    console.error('CAPTCHA Fetch Error:', error);
-  }
-}
-
-// Handle Form Submission for Individual Result
-const individualForm = document.getElementById('individualForm');
-if (individualForm) {
-  individualForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const exam = document.getElementById('examType').value;
-    const board = document.getElementById('boardName').value;
-    const year = document.getElementById('examYear').value;
-    const roll = individualForm.querySelector('input[placeholder*="Roll"]').value.trim();
-    const reg = individualForm.querySelector('input[placeholder*="Registration"]').value.trim();
-    const captchaValue = document.getElementById('captchaInput')?.value.trim() || '';
-
-    if (!roll) {
-      alert('অনুগ্রহ করে আপনার বোর্ড রোল নম্বরটি লিখুন।');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/result', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          exam,
-          board,
-          year,
-          roll,
-          reg,
-          value: captchaValue,
-          clientCookie: currentSessionCookie
-        })
+  // সার্বজনীন ট্যাব সিঙ্ক লজিক
+  document.addEventListener('click', (e) => {
+    const targetTab = e.target.closest('button, div');
+    
+    if (targetTab && (targetTab.innerText.includes('Individual Verification') || targetTab.innerText.includes('Institution Result'))) {
+      
+      // ১. সব ট্যাবের প্যারেন্ট/বাটন থেকে একটিভ স্টাইল মুছে দেওয়া
+      document.querySelectorAll('*').forEach(el => {
+        if (el.innerText && (el.innerText.includes('Individual Verification') || el.innerText.includes('Institution Result'))) {
+          el.classList.remove('active', 'border-b-2', 'border-emerald-600', 'text-emerald-600');
+        }
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        // রেজাল্ট টেবিল দেখানোর জন্য কন্টেইনার
-        const resultDisplay = document.getElementById('resultDisplay');
-        if (resultDisplay) {
-          resultDisplay.innerHTML = data.html;
-          resultDisplay.classList.remove('hidden');
-        } else {
-          alert('রেজাল্ট সফলভাবে পাওয়া গেছে!');
-        }
-      } else {
-        alert(data.message || 'রেজাল্ট পাওয়া যায়নি। প্রদত্ত তথ্য যাচাই করুন।');
+      // ২. ক্লিক করা ট্যাবে অ্যাক্টিভ ইফেক্ট যুক্ত করা
+      targetTab.classList.add('active');
+      
+      // যদি ইনলাইন স্টাইল বা নির্দিষ্ট সিএসএস ক্লাস থাকে, সেটি নিশ্চিত করা
+      if (targetTab.innerText.includes('Institution Result')) {
+        targetTab.style.borderColor = '#059669'; // সবুজ বর্ডার
+        targetTab.style.color = '#059669'; // সবুজ ফন্ট
       }
-    } catch (error) {
-      console.error('Result Fetch Error:', error);
-      alert('সার্ভারে সমস্যা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন।');
     }
   });
-}
+});
