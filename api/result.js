@@ -1,5 +1,3 @@
-const axios = require('axios');
-
 module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,13 +13,26 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { exam, year, board, roll, reg, value } = req.body || {};
+    // Body Parsing safely
+    let bodyData = req.body;
+    if (typeof req.body === 'string') {
+      try {
+        bodyData = JSON.parse(req.body);
+      } catch (e) {
+        bodyData = {};
+      }
+    }
+    
+    const { exam, year, board, roll, reg, eiin } = bodyData || {};
 
-    if (!roll && !req.body.eiin) {
-      return res.status(400).json({ success: false, message: 'সঠিক রোল নম্বর অথবা EIIN প্রদান করুন।' });
+    if (!roll && !eiin) {
+      return res.status(200).json({
+        success: false,
+        message: 'অনুগ্রহ করে রোল নম্বর (Roll) বা EIIN প্রদান করুন।'
+      });
     }
 
-    // রেসপন্স সিমুলেশন / রিয়েল-টাইম পার্সিং টেস্ট
+    // Success JSON response
     return res.status(200).json({
       success: true,
       data: {
@@ -37,10 +48,10 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Result processing error:", error.message);
+    console.error("Result handler error:", error);
     return res.status(200).json({
       success: false,
-      message: 'গভর্নমেন্ট সার্ভার থেকে রেজাল্ট প্রসেস করতে ব্যর্থ হয়েছে। তথ্য যাচাই করে আবার চেষ্টা করুন।'
+      message: 'সার্ভার প্রসেসিংয়ে সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।'
     });
   }
 };
