@@ -1,7 +1,8 @@
 let currentSessionCookie = '';
+let actualCaptchaText = ''; // আসল ক্যাপচা টেক্সট সেভ করার জন্য
 
 // ==========================================
-// ১. ট্যাবসুইচিং লজিক (ইনপুট তথ্য অক্ষত রাখে)
+// ১. ট্যাবসুইচিং লজিক
 // ==========================================
 function switchTab(tabType) {
   const tabIndividualBtn = document.getElementById('tab-individual');
@@ -80,8 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (data.success) {
-        mathQuestionEl.textContent = data.mathQuestion;
-        currentSessionCookie = data.sessionCookie || '';
+        // এখানে পরিবর্তন: আমরা SVG ইমেজ ডেটা INNERHTML এ সেট করছি
+        mathQuestionEl.innerHTML = data.mathQuestion; 
+        // আসল ক্যাপচা টেক্সট সেভ করছি যাতে রেজাল্ট সাবমিটের সময় পাঠাতে পারি
+        actualCaptchaText = data.captchaText; 
       } else {
         mathQuestionEl.textContent = 'ব্যর্থ হয়েছে';
         captchaErrorEl.textContent = 'সার্ভার থেকে ক্যাপচা আনা যায়নি।';
@@ -118,8 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
       roll: isIndividual ? document.getElementById('indRoll').value.trim() : '',
       reg: isIndividual ? document.getElementById('indReg').value.trim() : '',
       eiin: !isIndividual ? document.getElementById('instEiin').value.trim() : '',
-      value: captchaValue,
-      clientCookie: currentSessionCookie
+      value: captchaValue, // ইউজার যা টাইপ করল
+      clientCookie: actualCaptchaText // যাচাইয়ের জন্য আসল ক্যাপচা টেক্সট পাঠাচ্ছি
     };
 
     try {
@@ -162,7 +165,8 @@ function initModals() {
         <span onclick="document.getElementById('customCaptchaModal').style.display='none'" style="position:absolute; right:15px; top:10px; font-size:22px; cursor:pointer; color:#888;">&times;</span>
         <h3 style="margin-top:0; color:#2c3e50;">Security Check</h3>
         <p style="color:#666; font-size:14px;">গভমেন্ট সার্ভারের গাণিতিক ক্যাপচাটি পূরণ করুন:</p>
-        <div id="customMathQuestion" style="background:#f1f5f9; padding:12px; font-size:22px; font-weight:bold; color:#0f766e; border-radius:8px; margin:15px 0;">Loading...</div>
+        <!-- এখানে পরিবর্তন: আমরা INNERHTML ব্যবহার করে SVG দেখাবো -->
+        <div id="customMathQuestion" style="background:#f1f5f9; padding:5px; font-size:18px; color:#0f766e; border-radius:8px; margin:15px 0; max-height: 80px; display: flex; justify-content: center; align-items: center; overflow: hidden;">Loading...</div>
         <input type="text" id="customCaptchaInput" placeholder="উত্তর লিখুন (যেমন: 8)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; text-align:center; font-size:16px; margin-bottom:12px;" autocomplete="off" />
         <button id="customSubmitCaptchaBtn" style="width:100%; padding:12px; background:#059669; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Submit & View Result</button>
         <p id="customCaptchaError" style="color:#dc2626; font-size:13px; margin-top:10px;"></p>
