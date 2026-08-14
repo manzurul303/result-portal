@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -9,6 +10,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static CSS and JS files
+app.use(express.static(path.join(__dirname, '..')));
+
+// ROOT ROUTE: Serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+// Target Portal Endpoints
 const BASE_URL = 'https://www.educationboardresults.gov.bd/v2/home';
 const RESULT_URL = 'https://www.educationboardresults.gov.bd/result.php';
 
